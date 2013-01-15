@@ -1,0 +1,23 @@
+{
+  "name": "livelykernel-subserver-couchdb",
+  "version": "0.0.1",
+  "description": "Subserver for life_star to integrate CouchDB and Lively Kernel.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/LivelyKernel/subserver-couchdb"
+  },
+  "keywords": [
+    "LivelyKernel",
+    "CouchDB"
+  ],
+  "dependencies": [
+      "cradle@0.6.4",
+      "shelljs@0.1.2"
+  ],
+  "author": "Robert Krahn",
+  "license": "MIT"
+}
