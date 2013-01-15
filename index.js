@@ -34,19 +34,12 @@ function startCouchDB(thenDo) {
 // -=-=-=-=-=-
 function setupExports() {
     module.exports = function(basepath, app) {
-        app.get(basepath, function(req, res) {
+        app.get(basepath + ':dbName/:key', function(req, res) {
             try {
-                res.send(serverInfo);
-            } catch(e) {
-                res.status(500).send(String(e));
-            }
-        });
-        app.post(basepath + 'get', function(req, res) {
-            try {
-                var db = req.body.db, key = req.body.key;
+                var db = req.params.dbName, key = req.params.key;
                 get(db, key, function(err, doc) {
                     if (err) {
-                        res.status(500).send(String(err));
+                        res.status(500).send(err);
                     } else {
                         res.send(doc);
                     }
@@ -56,12 +49,16 @@ function setupExports() {
             }
 
         });
-        app.post(basepath + 'set', function(req, res) {
+        app.put(basepath + ':dbName/:key', function(req, res) {
+            if (!req.is('json')) {
+                res.status(415).send({error: "mime type json required"})
+            }
             try {
-                var db = req.body.db, key = req.body.key, doc = req.body.value;
+                var db = req.params.dbName, key = req.params.key,
+                    doc = req.body;
                 set(db, key, doc, function(err, dbRes) {
                     if (err) {
-                        res.status(500).send(String(err));
+                        res.status(500).send(err);
                     } else {
                         res.send(dbRes);
                     }
@@ -70,6 +67,13 @@ function setupExports() {
                 res.status(500).send(String(e));
             }
 
+        });
+        app.get(basepath, function(req, res) {
+            try {
+                res.send(serverInfo);
+            } catch(e) {
+                res.status(500).send(e);
+            }
         });
     }
 }
@@ -82,7 +86,7 @@ var dbCache = {},
         cache: true
     });
 
-function withDB(dbName, doFunc) {
+function withDB(dbName, shouldCreate, doFunc) {
     var db = couchDBConnection.database(dbName);
     db.exists(function (err, exists) {
         if (err) {
@@ -90,7 +94,12 @@ function withDB(dbName, doFunc) {
             echo(err);
             doFunc(err);
         } else if (!exists) {
-            db.create(function(err) { doFunc(err, db); });
+            if (shouldCreate) {
+                console.log("Creating database %s", dbName);
+                db.create(function(err) { doFunc(err, db); });
+            } else {
+                doFunc("DB " + dbName + " does not exist", null);
+            }
         } else {
             doFunc(null, db);
         }
@@ -98,14 +107,14 @@ function withDB(dbName, doFunc) {
 }
 
 function get(dbName, key, thenDo) {
-    withDB(dbName, function(err, db) {
+    withDB(dbName, false, function(err, db) {
         if (err) { thenDo(err); return }
         db.get(key, thenDo);
     });
 }
 
 function set(dbName, key, doc, thenDo) {
-    withDB(dbName, function(err, db) {
+    withDB(dbName, true, function(err, db) {
         if (err) { thenDo(err); return }
         try {
             db.save(key, doc, thenDo);
