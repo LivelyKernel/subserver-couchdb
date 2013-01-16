@@ -4,5 +4,5 @@ You can install and start it with
 
 ```sh
 > git clone https://github.com/LivelyKernel/subserver-couchdb.git
-> lk server --subserver couchdb:subserver-couchdb/index.js
+> lk server --subserver couchdb:$PWD/subserver-couchdb/index.js
 ```
