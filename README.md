@@ -1,4 +1,4 @@
-This is a subserver for life_star. See [](https://github.com/LivelyKernel/LivelyKernel/wiki/Subservers).
+This is a subserver for life_star. See the [subserver documentation](https://github.com/LivelyKernel/LivelyKernel/wiki/Subservers) for more details.
 
 You can install and start it with
 
