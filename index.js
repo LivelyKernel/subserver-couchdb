@@ -34,6 +34,7 @@ function startCouchDB(thenDo) {
 // -=-=-=-=-=-
 function setupExports() {
     module.exports = function(basepath, app) {
+        // get document
         app.get(basepath + ':dbName/:key', function(req, res) {
             try {
                 var db = req.params.dbName, key = req.params.key;
@@ -45,10 +46,10 @@ function setupExports() {
                     }
                 });
             } catch(e) {
-                res.status(500).send(String(e));
+                res.status(500).send(e);
             }
-
         });
+        // save document
         app.put(basepath + ':dbName/:key', function(req, res) {
             if (!req.is('json')) {
                 res.status(415).send({error: "mime type json required"})
@@ -64,10 +65,42 @@ function setupExports() {
                     }
                 });
             } catch(e) {
-                res.status(500).send(String(e));
+                res.status(500).send(e);
+            }
+        });
+        // create db
+        app.put(basepath + ':dbName/', function(req, res) {
+            try {
+                var dbName = req.params.dbName, key = req.params.key;
+                withDB(dbName, true, function(err, db) {
+                    if (err) { res.status(500).send(err); return }
+                    res.send({status: dbName + ' exists or was created'});
+                });
+            } catch(e) {
+                res.status(500).send(e);
             }
 
         });
+        // delete db
+        app['delete'](basepath + ':dbName/', function(req, res) {
+            try {
+                var dbName = req.params.dbName, key = req.params.key;
+                withDB(dbName, false, function(err, db) {
+                    if (db) {
+                        db.destroy(function(err) {
+                            if (err) { res.status(500).send(err); return }
+                            res.send({status: dbName + ' removed'});
+                        });
+                    } else {
+                        res.send({status: dbName + ' does not exist'});
+                    }
+                });
+            } catch(e) {
+                res.status(500).send(e);
+            }
+
+        });
+        // server infos
         app.get(basepath, function(req, res) {
             try {
                 res.send(serverInfo);
